@@ -13,14 +13,33 @@ function renderApp(appState) {
   renderTitle(appState.title)
   renderContent(appState.content)
 }
+/**
+ * 应用观察者模式
+ * @param {Object} state 
+ * @param {Function} stateChanger 
+ */
+function createStore(state, stateChanger) {
+  const listeners = []
+  const subscribe = listener => listeners.push(listener)
+  const getState = () => state
+  const dispatch = action => {
+    stateChanger(state, action)
+    listeners.forEach(listener => listener())
+  }
+  return {
+    getState,
+    dispatch,
+    subscribe
+  }
+}
 
-function dispatch(action) {
+function stateChanger(state, action) {
   switch(action.type) {
     case 'UPDATE_TITLE_TEXT':
-      appState.title.text = action.text
+      state.title.text = action.text
       break
     case 'UPDATE_TITLE_COLOR':
-      appState.title.color = action.color
+      state.title.color = action.color
       break
     default:
       break
@@ -39,13 +58,15 @@ function renderContent(content) {
   contentDOM.style.color = content.color
 }
 
-renderApp(appState)
-dispatch({
+const store=  createStore(appState, stateChanger)
+store.subscribe(() => renderApp(store.getState()))
+
+renderApp(store.getState())
+store.dispatch({
   type: 'UPDATE_TITLE_TEXT',
   text: 'water is gay gay'
 })
-dispatch({
+store.dispatch({
   type: 'UPDATE_TITLE_COLOR',
-  color: 'blue'
+  color: '#f00'
 })
-renderApp(appState)
