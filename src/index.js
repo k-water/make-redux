@@ -1,17 +1,20 @@
 /**
  * 应用观察者模式
  * @param {Object} state
- * @param {Function} stateChanger
+ * @param {Function} reducer
  */
-function createStore(state, stateChanger) {
+function createStore(reducer) {
+  let state = null
   const listeners = []
   const subscribe = listener => listeners.push(listener)
   const getState = () => state
   const dispatch = action => {
     // 覆盖原对象
-    state = stateChanger(state, action)
+    state = reducer(state, action)
     listeners.forEach(listener => listener())
   }
+  // 初始化state
+  dispatch({})
   return {
     getState,
     dispatch,
@@ -54,18 +57,19 @@ function renderContent(newContent, oldContent = {}) {
   contentDOM.style.color = oldContent.color
 }
 
-const appState = {
-  title: {
-    text: "water make redux",
-    color: "red"
-  },
-  content: {
-    text: "water make redux",
-    color: "green"
+function reducer(state, action) {
+  if (!state) {
+    return {
+      title: {
+        text: "water make redux",
+        color: "red"
+      },
+      content: {
+        text: "water make redux",
+        color: "green"
+      }
+    }
   }
-}
-
-function stateChanger(state, action) {
   switch (action.type) {
     case "UPDATE_TITLE_TEXT":
       return {
@@ -87,20 +91,20 @@ function stateChanger(state, action) {
       return state
   }
 }
-
-const store = createStore(appState, stateChanger)
+// 生成store
+const store = createStore(reducer)
 let oldState = store.getState()
-// 监听数据变化
+// 监听数据变化重新渲页面
 store.subscribe(() => {
   const newState = store.getState()
   renderApp(newState, oldState)
   oldState = newState
 })
-
+// 首次渲染页面
 renderApp(store.getState())
 store.dispatch({
   type: "UPDATE_TITLE_TEXT",
-  text: "water is gay gay"
+  text: "water is fighting"
 })
 store.dispatch({
   type: "UPDATE_TITLE_COLOR",
